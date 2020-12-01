@@ -25,4 +25,17 @@ impl Day01 {
             }
         }
     }
+
+    pub fn task_2(&self) {
+        for v1 in &self.input {
+            for v2 in &self.input {
+                for v3 in &self.input {
+                    if v1+v2+v3 == 2020 {
+                        println!("{}", v1*v2*v3);
+                        return;
+                    }
+                }
+            }
+        }
+    }
 }
