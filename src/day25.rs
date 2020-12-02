@@ -27,6 +27,6 @@ impl AdventOfCodeDay for Day25 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        return "".to_owned()
     }
 }
