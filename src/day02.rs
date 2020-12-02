@@ -1,14 +1,39 @@
 
 use crate::common::AdventOfCodeDay;
 
-pub struct Day02 {
+#[derive(Debug)]
+struct Data {
+    num1: i32,
+    num2: i32,
+
+    character: char,
     
+    password: String,
+}
+
+pub struct Day02 {
+    input: Vec<Data>,
 }
 
 impl Day02 {
     pub fn new() -> Self {
+        let input_bytes = include_bytes!("../res/02_input.txt");
+        let input_str = String::from_utf8_lossy(input_bytes);
+
+        let lines = input_str
+                        .lines()
+                        .map(|p| p.split(" ").map(String::from).collect::<Vec<String>>())
+                        .map(|p| Data 
+                            {
+                                 num1: p[0].split("-").nth(0).unwrap().parse::<i32>().unwrap(),
+                                 num2: p[0].split("-").nth(1).unwrap().parse::<i32>().unwrap(),
+                                 character: p[1].chars().nth(0).unwrap(),
+                                 password: p[2].to_owned(),
+                            })
+                        .collect::<Vec<Data>>();
+
         Self {
-            //
+            input: lines
         }
     }
 }
@@ -16,12 +41,18 @@ impl Day02 {
 impl AdventOfCodeDay for Day02 {
 
     fn task_1(&self) -> String {
-        //TODO
-        panic!();
+        //for v in &self.input { println!("{:?}", v); }
+
+        return self.input.iter().filter(|p| 
+        {
+            return (p.password.chars().filter(|c| *c == p.character).count() as i32) >= p.num1 &&
+                   (p.password.chars().filter(|c| *c == p.character).count() as i32) <= p.num2;
+        })
+        .count()
+        .to_string()
     }
 
     fn task_2(&self) -> String  {
-        //TODO
-        panic!();
+        return "TODO".to_owned() //TODO
     }
 }
