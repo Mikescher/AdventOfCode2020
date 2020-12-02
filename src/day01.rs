@@ -1,4 +1,3 @@
-
 use crate::common::AdventOfCodeDay;
 
 pub struct Day01 {
