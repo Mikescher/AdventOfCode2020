@@ -1,5 +1,6 @@
-
 use crate::common::AdventOfCodeDay;
+
+use std::convert::TryInto;
 
 #[derive(Debug)]
 struct Data {
@@ -53,6 +54,15 @@ impl AdventOfCodeDay for Day02 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        return self.input
+            .iter()
+            .filter(|p| 
+            {
+                let c1 = ((p.password.len() as i32) > p.num1-1) && p.password.chars().nth((p.num1 - 1).try_into().unwrap()).unwrap() == p.character;
+                let c2 = ((p.password.len() as i32) > p.num2-1) && p.password.chars().nth((p.num2 - 1).try_into().unwrap()).unwrap() == p.character;
+                return c1 ^ c2;
+            })
+            .count()
+            .to_string()
     }
 }
