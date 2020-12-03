@@ -22,17 +22,28 @@ impl Day03 {
     }
 
     pub fn get(&self, x: i32, y: i32) -> bool {
+        if y >= self.height { return false }
         return self.input[y as usize][(x % self.width) as usize]
+    }
+
+    pub fn treecount(&self, dx: i32, dy: i32) -> i32 {
+        (0..self.height).filter(|y| self.get(dx*y, dy*y)).count() as i32
     }
 }
 
 impl AdventOfCodeDay for Day03 {
 
     fn task_1(&self) -> String {
-        (0..self.height).filter(|y| self.get(3*y, *y)).count().to_string()
+        return self.treecount(3, 1).to_string()
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        let prod = self.treecount(1, 1) *
+                   self.treecount(3, 1) *
+                   self.treecount(5, 1) *
+                   self.treecount(7, 1) *
+                   self.treecount(1, 2);
+
+        return prod.to_string();
     }
 }
