@@ -40,7 +40,7 @@ fn main() {
                    sysargs.iter().skip(1).any(|p| p == "--bench") || 
                    sysargs.iter().skip(1).any(|p| p == "-b");
 
-    let args : Vec<String> = sysargs.iter().skip(1).filter(|p| ! p.starts_with("-")).map(String::from).collect();
+    let args : Vec<String> = sysargs.iter().skip(1).filter(|p| ! p.starts_with('-')).map(String::from).collect();
 
     if args.len() > 0 && (args[0] == "help" || is_help) {
         print_help();
@@ -50,7 +50,7 @@ fn main() {
     if args.len() == 0 {
         print_help();
         
-        println!("");
+        println!();
 
         let day = input_int("Day");
         let tsk = input_int("Task");
@@ -81,21 +81,21 @@ fn main() {
         return;
     }
     
-    println!("");
+    println!();
     println!("Invalid arguments supplied, use --help for commandline documentation");
-    println!("");
+    println!();
 }
 
 fn print_help() {
     println!("Advent of code 2020 /by Mikescher.");
-    println!("");
+    println!();
     println!("Usage: ");
     println!("  advent_of_code_2020 help");
     println!("  advent_of_code_2020 <day>");
     println!("  advent_of_code_2020 <day> <task>");
     println!("  advent_of_code_2020 all");
     println!("  advent_of_code_2020 table");
-    println!("");
+    println!();
     println!("Options:");
     println!("  -h --help");
     println!("  -b --benchmark");
@@ -225,9 +225,8 @@ fn input_int(prompt: &str) -> i32 {
         let mut line = String::new();
         let r = io::stdin().read_line(&mut line);
         if r.is_ok() {
-            let num = line.trim().parse::<i32>();
-            if num.is_ok() {
-                return num.unwrap();
+            if let Ok(num) = line.trim().parse::<i32>() {
+                return num;
             }
         }
     }
