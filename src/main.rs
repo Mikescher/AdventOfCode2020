@@ -30,6 +30,8 @@ use std::env;
 use std::io;
 use std::io::prelude::*;
 
+#[macro_use] extern crate lazy_static;
+
 fn main() {
     let sysargs: Vec<_> = env::args().collect();
 

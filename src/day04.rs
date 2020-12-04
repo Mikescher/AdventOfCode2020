@@ -51,6 +51,7 @@ impl Day04 {
 }
 
 impl Passport {
+
     pub fn is_all_present(&self) -> bool {
         if self.get("byr") == None { return false }
         if self.get("iyr") == None { return false }
@@ -65,13 +66,23 @@ impl Passport {
     }
 
     pub fn is_all_valid(&self) -> bool {
-        if self.get_and_validate("byr", r"^[12][90][0-9][0-9]$") == None { return false }
-        if self.get_and_validate("iyr", r"^20[12][0-9]$") == None { return false }
-        if self.get_and_validate("eyr", r"^20[23][0-9]$") == None { return false }
-        if self.get_and_validate("hgt", r"^[0-9]+(in|cm)$") == None { return false }
-        if self.get_and_validate("hcl", r"^#[0-9a-f]{6}$") == None { return false }
-        if self.get_and_validate("ecl", r"^(amb|blu|brn|gry|grn|hzl|oth)$") == None { return false }
-        if self.get_and_validate("pid", r"^[0-9]{9}$") == None { return false }
+        lazy_static! {
+            static ref REX_BYR: Regex = Regex::new(r"^[12][90][0-9][0-9]$").unwrap();
+            static ref REX_IYR: Regex = Regex::new(r"^20[12][0-9]$").unwrap();
+            static ref REX_EYR: Regex = Regex::new(r"^20[23][0-9]$").unwrap();
+            static ref REX_HGT: Regex = Regex::new(r"^[0-9]+(in|cm)$").unwrap();
+            static ref REX_HCL: Regex = Regex::new(r"^#[0-9a-f]{6}$").unwrap();
+            static ref REX_ECL: Regex = Regex::new(r"^(amb|blu|brn|gry|grn|hzl|oth)$").unwrap();
+            static ref REX_PID: Regex = Regex::new(r"^[0-9]{9}$").unwrap();
+        }
+
+        if self.get_and_validate("byr", &REX_BYR) == None { return false }
+        if self.get_and_validate("iyr", &REX_IYR) == None { return false }
+        if self.get_and_validate("eyr", &REX_EYR) == None { return false }
+        if self.get_and_validate("hgt", &REX_HGT) == None { return false }
+        if self.get_and_validate("hcl", &REX_HCL) == None { return false }
+        if self.get_and_validate("ecl", &REX_ECL) == None { return false }
+        if self.get_and_validate("pid", &REX_PID) == None { return false }
         
         let byr = self.get("byr").unwrap().parse::<i32>().unwrap();
         let iyr = self.get("iyr").unwrap().parse::<i32>().unwrap();
@@ -104,9 +115,8 @@ impl Passport {
         return true
     }
 
-    pub fn get_and_validate(&self, key: &str, rex: &str) -> Option<String> {
+    pub fn get_and_validate(&self, key: &str, rex: &Regex) -> Option<String> {
         if let Some(val) = self.get(key) {
-            let rex = Regex::new(rex).unwrap();
             if rex.is_match(&val) {
                 return Some(val)
             }
