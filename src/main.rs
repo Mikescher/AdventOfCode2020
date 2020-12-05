@@ -157,10 +157,17 @@ fn run_benchmark(day: i32, tsk: i32) {
 
     println!();
     println!("Day {:0>2} - Task {}: ran {} times for a total duration of {} ms ({:.3} seconds)", day, tsk, count, d.as_millis(), d.as_secs_f32());
-    println!("  Average time: {: >5} ms ({:.3} seconds)", d.as_millis() / count, d.as_secs_f32() / count as f32);
-    println!("  Median time:  {: >5} ms ({:.3} seconds)", median.as_millis(), median.as_secs_f32());
-    println!("  Min time:     {: >5} ms ({:.3} seconds)", times.first().unwrap().as_millis(), times.first().unwrap().as_secs_f32());
-    println!("  Max time:     {: >5} ms ({:.3} seconds)", times.last().unwrap().as_millis(), times.last().unwrap().as_secs_f32());
+    if d.as_millis() / count < 8 {
+        println!("  Average time: {: >5} ns ({:.3} seconds)", d.as_micros() / count, d.as_secs_f32() / count as f32);
+        println!("  Median time:  {: >5} ns ({:.3} seconds)", median.as_micros(), median.as_secs_f32());
+        println!("  Min time:     {: >5} ns ({:.3} seconds)", times.first().unwrap().as_micros(), times.first().unwrap().as_secs_f32());
+        println!("  Max time:     {: >5} ns ({:.3} seconds)", times.last().unwrap().as_micros(), times.last().unwrap().as_secs_f32());
+    } else {
+        println!("  Average time: {: >5} ms ({:.3} seconds)", d.as_millis() / count, d.as_secs_f32() / count as f32);
+        println!("  Median time:  {: >5} ms ({:.3} seconds)", median.as_millis(), median.as_secs_f32());
+        println!("  Min time:     {: >5} ms ({:.3} seconds)", times.first().unwrap().as_millis(), times.first().unwrap().as_secs_f32());
+        println!("  Max time:     {: >5} ms ({:.3} seconds)", times.last().unwrap().as_millis(), times.last().unwrap().as_secs_f32());
+    }
     println!();
 }
 
