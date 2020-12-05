@@ -1,21 +1,48 @@
 use crate::common::AdventOfCodeDay;
 
-pub struct Day05 {
-    //input: Vec<String>,
+use std::u32;
+
+#[derive(Debug)]
+struct BoardingPass {
+    row: u32,
+    column: u32,
 }
+
+#[derive(Debug)]
+pub struct Day05 {
+    input: Vec<BoardingPass>,
+}
+
+impl BoardingPass {
+    fn seat_id(&self) -> u32 { self.row * 8 + self.column }
+}
+
+fn parse_line(val: &str) -> BoardingPass {
+    
+    let sval = val.to_owned()
+             .replace("F", "0")
+             .replace("B", "1")
+             .replace("R", "1")
+             .replace("L", "0");
+
+    BoardingPass {
+        row:    u32::from_str_radix(&sval[0..7],  2).unwrap(),
+        column: u32::from_str_radix(&sval[7..10], 2).unwrap(),
+    }
+} 
 
 impl Day05 {
     pub fn new() -> Self {
-        //let input_bytes = include_bytes!("../res/05_input.txt");
-        //let input_str = String::from_utf8_lossy(input_bytes);
-        //
-        //let lines = input_str
-        //                .lines()
-        //                .map(|p| String::from(p))
-        //                .collect::<Vec<String>>();
+        let input_bytes = include_bytes!("../res/05_input.txt");
+        let input_str = String::from_utf8_lossy(input_bytes);
+        
+        let data = input_str
+                        .lines()
+                        .map(parse_line)
+                        .collect::<Vec<BoardingPass>>();
 
         Self {
-            //input: lines
+            input: data
         }
     }
 }
@@ -23,7 +50,8 @@ impl Day05 {
 impl AdventOfCodeDay for Day05 {
 
     fn task_1(&self) -> String {
-        return "TODO".to_owned() //TODO
+        //println!("{:?}", self.input);
+        return self.input.iter().map(|p| p.seat_id()).max().unwrap().to_string()
     }
 
     fn task_2(&self) -> String  {
