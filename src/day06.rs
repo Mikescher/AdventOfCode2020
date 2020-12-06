@@ -30,9 +30,19 @@ fn parse_group(lines: &str) -> Group {
     }
 }
 
+impl DeclForm {
+    fn contains(&self, c: char) -> bool {
+        self.answers.contains(&c)
+    } 
+}
+
 impl Group {
     pub fn all_questions_any_yes(&self) -> Vec<char> {
         self.forms.iter().map(|p| p.answers.iter().collect::<Vec<&char>>()).flatten().collect::<HashSet<&char>>().iter().map(|p| **p).collect()
+    }
+
+    pub fn all_questions_all_yes(&self) -> Vec<char> {
+        self.forms[0].answers.iter().filter(|p| self.forms.iter().all(|f| f.contains(**p))).map(|p| *p).collect()
     }
 }
 
@@ -64,6 +74,6 @@ impl AdventOfCodeDay for Day06 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        return self.groups.iter().map(|p| p.all_questions_all_yes().len()).sum::<usize>().to_string();
     }
 }
