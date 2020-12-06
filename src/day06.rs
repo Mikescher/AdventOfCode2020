@@ -1,21 +1,55 @@
 use crate::common::AdventOfCodeDay;
 
+use std::collections::HashSet;
+use regex::Regex;
+
+#[derive(Debug)]
+struct DeclForm {
+    answers: HashSet<char>,
+}
+
+#[derive(Debug)]
+struct Group {
+    forms: Vec<DeclForm>,
+}
+
+#[derive(Debug)]
 pub struct Day06 {
-    //input: Vec<String>,
+    groups: Vec<Group>,
+}
+
+fn parse_form(line: &str) -> DeclForm {
+    DeclForm {
+        answers: line.chars().collect(),
+    }
+}
+
+fn parse_group(lines: &str) -> Group {
+    Group {
+        forms: lines.lines().map(parse_form).collect(),
+    }
+}
+
+impl Group {
+    pub fn all_questions_any_yes(&self) -> Vec<char> {
+        self.forms.iter().map(|p| p.answers.iter().collect::<Vec<&char>>()).flatten().collect::<HashSet<&char>>().iter().map(|p| **p).collect()
+    }
 }
 
 impl Day06 {
     pub fn new() -> Self {
-        //let input_bytes = include_bytes!("../res/06_input.txt");
-        //let input_str = String::from_utf8_lossy(input_bytes);
-        //
-        //let lines = input_str
-        //                .lines()
-        //                .map(|p| String::from(p))
-        //                .collect::<Vec<String>>();
+        let input_bytes = include_bytes!("../res/06_input.txt");
+        let input_str = String::from_utf8_lossy(input_bytes);
+        
+        
+        let rex_lines = Regex::new(r"(\r?\n){2}").unwrap();
+
+        let data = rex_lines.split(&input_str.to_owned())
+                        .map(parse_group)
+                        .collect::<Vec<Group>>();
 
         Self {
-            //input: lines
+            groups: data,    
         }
     }
 }
@@ -23,7 +57,10 @@ impl Day06 {
 impl AdventOfCodeDay for Day06 {
 
     fn task_1(&self) -> String {
-        return "TODO".to_owned() //TODO
+        //for r in &self.groups {
+        //    println!("{} {:?}", r.all_questions_any_yes().len(), r.all_questions_any_yes())
+        //}
+        return self.groups.iter().map(|p| p.all_questions_any_yes().len()).sum::<usize>().to_string();
     }
 
     fn task_2(&self) -> String  {
