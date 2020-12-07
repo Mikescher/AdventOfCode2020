@@ -93,6 +93,10 @@ impl Day07 {
     
         return false;
     }
+
+    fn get_full_children_count(&self, name: &str) -> usize {
+        self.find_rule(name).unwrap().children.iter().map(|p| p.0 + p.0 * self.get_full_children_count(&p.1)).sum()
+    }
 }
 
 impl AdventOfCodeDay for Day07 {
@@ -102,6 +106,6 @@ impl AdventOfCodeDay for Day07 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        self.get_full_children_count("shiny gold").to_string()
     }
 }
