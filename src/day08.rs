@@ -4,36 +4,36 @@ use itertools::Itertools;
 use std::collections::HashSet;
 use std::fmt::Display;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct HGCProgramm {
-    prog: Vec<HGCCommand>,
+    code: Vec<HGCCommand>,
 }
 
 impl HGCProgramm {
-    fn parse_program(code: String) -> HGCProgramm {
+    fn parse_program(codestr: String) -> HGCProgramm {
         HGCProgramm {
-            prog: code.lines().map(HGCCommand::parse).collect(),
+            code: codestr.lines().map(HGCCommand::parse).collect(),
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct HGCCommand {
-    cmd: HGCCommandType,
-    arg: i32,
+    cmdtype: HGCCommandType,
+    argument:  i32,
 }
 
 impl HGCCommand {
     fn parse(line: &str) -> HGCCommand {
         let (str_cmd, str_arg) =  line.split(' ').collect_tuple::<(_, _)>().unwrap();
         HGCCommand {
-            cmd: HGCCommandType::parse(str_cmd),
-            arg: str_arg.parse::<i32>().unwrap(),
+            cmdtype: HGCCommandType::parse(str_cmd),
+            argument: str_arg.parse::<i32>().unwrap(),
         }
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 enum HGCCommandType {
     NOP,
     ACC,
@@ -76,20 +76,20 @@ impl HGCMachineState {
     }
 
     fn exec_step(&mut self, prog: &HGCProgramm) {
-        self.exec_single(&prog.prog[self.ip])
+        self.exec_single(&prog.code[self.ip])
     }
 
     fn exec_single(&mut self, cmd: &HGCCommand) {
         if self.trace {
-            println!("ip: {: <4}  ||  cmd:[{}({: <5})]  (acc: {})", self.ip, cmd.cmd, cmd.arg, self.acc)
+            println!("ip: {: <4}  ||  cmd:[{}({: <5})]  (acc: {})", self.ip, cmd.cmdtype, cmd.argument, self.acc)
         }
 
-        if cmd.cmd == HGCCommandType::NOP {
+        if cmd.cmdtype == HGCCommandType::NOP {
             self.ip += 1;
-        } else if cmd.cmd == HGCCommandType::JMP {
-            self.ip = (self.ip as i32 + cmd.arg) as  usize;
-        } else if cmd.cmd == HGCCommandType::ACC {
-            self.acc += cmd.arg;
+        } else if cmd.cmdtype == HGCCommandType::JMP {
+            self.ip = (self.ip as i32 + cmd.argument) as  usize;
+        } else if cmd.cmdtype == HGCCommandType::ACC {
+            self.acc += cmd.argument;
             self.ip += 1;
         }
     }
@@ -110,9 +110,8 @@ impl Day08 {
     }
 }
 
-impl AdventOfCodeDay for Day08 {
-
-    fn task_1(&self) -> String {
+impl Day08 {
+    fn find_loop(prog: &HGCProgramm) -> (i32, bool) {
         let mut vm = HGCMachineState::new();
 
         //vm.trace = true;
@@ -121,15 +120,52 @@ impl AdventOfCodeDay for Day08 {
         visited.insert(vm.ip);
 
         loop {
-            vm.exec_step(&self.input);
+            vm.exec_step(prog);
             if visited.contains(&vm.ip) {
-                return vm.acc.to_string();
+                return (vm.acc, false);
             }
             visited.insert(vm.ip);
+
+            if vm.ip == prog.code.len() {
+                return (vm.acc, true);
+            }
         }
+    }
+}
+
+impl AdventOfCodeDay for Day08 {
+
+    fn task_1(&self) -> String {
+        return Day08::find_loop(&self.input).0.to_string();
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        for i in 0..self.input.code.len() {
+            if self.input.code[i].cmdtype == HGCCommandType::ACC {
+                continue;
+            }
+
+            let mut progclone = self.input.clone();
+
+            if self.input.code[i].cmdtype == HGCCommandType::JMP {
+                progclone.code[i] = HGCCommand {
+                    cmdtype: HGCCommandType::NOP,
+                    argument: self.input.code[i].argument,
+                }
+            } else if self.input.code[i].cmdtype == HGCCommandType::NOP {
+                progclone.code[i] = HGCCommand {
+                    cmdtype: HGCCommandType::JMP,
+                    argument: self.input.code[i].argument,
+                }
+            } else {
+                panic!();
+            }
+
+            if let (acc, true) = Day08::find_loop(&progclone) {
+                return acc.to_string();
+            }
+        }
+        
+        panic!();
     }
 }
