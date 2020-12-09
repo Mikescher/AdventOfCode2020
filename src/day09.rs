@@ -53,6 +53,39 @@ impl AdventOfCodeDay for Day09 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        let target = self.find_invalid();
+
+        let mut sum  = self.input[0];
+        let mut idx1 = 0; //inclusive
+        let mut idx2 = 0; //inclusive
+
+        loop {
+            if sum == target {
+                
+                /*
+                println!("[{}..{}] [[{:?}]] = {} ({})", 
+                            idx1, 
+                            idx2, 
+                            self.input.iter().skip(idx1).take(idx2-idx1+1).collect::<Vec<&u64>>(), 
+                            self.input.iter().skip(idx1).take(idx2-idx1+1).sum::<u64>(),
+                            target);
+                */
+
+                return (self.input.iter().skip(idx1).take(idx2-idx1+1).min().unwrap() + self.input.iter().skip(idx1).take(idx2-idx1+1).max().unwrap()).to_string();
+
+            } else if sum < target {
+
+                idx2 += 1;
+                sum  += self.input[idx2];
+
+            } else if sum > target {
+
+                sum  -= self.input[idx1];
+                idx1 += 1;
+
+            }
+
+            //println!("[{}..{}] = {}", idx1, idx2, sum);
+        }
     }
 }
