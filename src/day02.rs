@@ -42,7 +42,7 @@ impl Day02 {
 impl AdventOfCodeDay for Day02 {
 
     fn task_1(&self) -> String {
-        //for v in &self.input { println!("{:?}", v); }
+        if is_verbose!() { for v in &self.input { verboseln!("{:?}", v); } }
 
         return self.input.iter().filter(|p| 
         {

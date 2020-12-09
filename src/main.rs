@@ -1,4 +1,4 @@
-mod common;
+#[macro_use] mod common;
 
 mod day01;
 mod day02;
@@ -42,7 +42,12 @@ fn main() {
                    sysargs.iter().skip(1).any(|p| p == "--bench") || 
                    sysargs.iter().skip(1).any(|p| p == "-b");
 
+    let is_verbose = sysargs.iter().skip(1).any(|p| p == "--verbose") || 
+                     sysargs.iter().skip(1).any(|p| p == "-v");
+
     let args : Vec<String> = sysargs.iter().skip(1).filter(|p| ! p.starts_with('-')).map(String::from).collect();
+
+    common::PRINT_VERBOSE.store(is_verbose && !is_bench, std::sync::atomic::Ordering::Relaxed);
 
     if args.len() > 0 && (args[0] == "help" || is_help) {
         print_help();
@@ -101,6 +106,7 @@ fn print_help() {
     println!("Options:");
     println!("  -h --help");
     println!("  -b --benchmark");
+    println!("  -v --verbose");
 }
 
 fn run_normal(day: i32, tsk: i32, benchmark: bool) {

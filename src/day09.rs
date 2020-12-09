@@ -1,5 +1,6 @@
 use crate::common::AdventOfCodeDay;
 
+
 use std::collections::HashSet;
 
 pub struct Day09 {
@@ -21,7 +22,7 @@ impl Day09 {
         }
     }
 
-    pub fn all_combinations(data: Vec<&u64>) -> HashSet<u64> {
+    fn all_combinations(data: Vec<&u64>) -> HashSet<u64> {
         let mut hs: HashSet<u64> = HashSet::new();
 
         for i1 in 0..24 {
@@ -36,10 +37,10 @@ impl Day09 {
     fn find_invalid(&self) -> u64 {
         for i in 25..self.input.len() {
             let comb = Day09::all_combinations(self.input.iter().skip(i-25).take(25).collect());
+
             if !comb.contains(&self.input[i]) {
                 return self.input[i];
             }
-            
         }
 
         panic!();
@@ -62,14 +63,13 @@ impl AdventOfCodeDay for Day09 {
         loop {
             if sum == target {
                 
-                /*
-                println!("[{}..{}] [[{:?}]] = {} ({})", 
+                verboseln!("[{}..{}] [[{:?}]] = {} ({})", 
                             idx1, 
                             idx2, 
                             self.input.iter().skip(idx1).take(idx2-idx1+1).collect::<Vec<&u64>>(), 
                             self.input.iter().skip(idx1).take(idx2-idx1+1).sum::<u64>(),
                             target);
-                */
+
 
                 return (self.input.iter().skip(idx1).take(idx2-idx1+1).min().unwrap() + self.input.iter().skip(idx1).take(idx2-idx1+1).max().unwrap()).to_string();
 
@@ -85,7 +85,7 @@ impl AdventOfCodeDay for Day09 {
 
             }
 
-            //println!("[{}..{}] = {}", idx1, idx2, sum);
+            verboseln!("[{}..{}] = {}", idx1, idx2, sum);
         }
     }
 }

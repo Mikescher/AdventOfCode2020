@@ -38,6 +38,12 @@ impl AdventOfCodeDay for Day03 {
     }
 
     fn task_2(&self) -> String  {
+        verboseln!("[1,1]: {}", self.treecount(1, 1));
+        verboseln!("[3,1]: {}", self.treecount(3, 1));
+        verboseln!("[5,1]: {}", self.treecount(5, 1));
+        verboseln!("[7,1]: {}", self.treecount(7, 1));
+        verboseln!("[1,2]: {}", self.treecount(1, 2));
+
         let prod = self.treecount(1, 1) *
                    self.treecount(3, 1) *
                    self.treecount(5, 1) *

@@ -67,9 +67,11 @@ impl Day06 {
 impl AdventOfCodeDay for Day06 {
 
     fn task_1(&self) -> String {
-        //for r in &self.groups {
-        //    println!("{} {:?}", r.all_questions_any_yes().len(), r.all_questions_any_yes())
-        //}
+        if is_verbose!() {
+            for r in &self.groups {
+                verboseln!("{} {:?}", r.all_questions_any_yes().len(), r.all_questions_any_yes())
+            }
+        }
         return self.groups.iter().map(|p| p.all_questions_any_yes().len()).sum::<usize>().to_string();
     }
 

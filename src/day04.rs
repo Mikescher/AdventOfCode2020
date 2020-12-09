@@ -136,10 +136,12 @@ impl Passport {
 
 impl AdventOfCodeDay for Day04 {
     fn task_1(&self) -> String {
-        //for r in &self.input {
-        //    println!("{:?}", r);
-        //    println!();
-        //}
+        if is_verbose!() {
+            for r in &self.input {
+                verboseln!("{:?}", r);
+                verboseln!();
+            }
+        }
         return self.input.iter().filter(|p| p.is_all_present()).count().to_string()
     }
 

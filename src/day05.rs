@@ -50,7 +50,7 @@ impl Day05 {
 impl AdventOfCodeDay for Day05 {
 
     fn task_1(&self) -> String {
-        //println!("{:?}", self.input);
+        verboseln!("{:?}", self.input);
         return self.input.iter().map(|p| p.seat_id()).max().unwrap().to_string()
     }
 

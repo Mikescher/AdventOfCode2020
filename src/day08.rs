@@ -68,7 +68,7 @@ struct HGCMachineState {
 impl HGCMachineState {
     fn new() -> HGCMachineState {
         HGCMachineState {
-            trace: false,
+            trace: is_verbose!(),
 
             acc: 0,
             ip: 0,
@@ -81,7 +81,7 @@ impl HGCMachineState {
 
     fn exec_single(&mut self, cmd: &HGCCommand) {
         if self.trace {
-            println!("ip: {: <4}  ||  cmd:[{}({: <5})]  (acc: {})", self.ip, cmd.cmdtype, cmd.argument, self.acc)
+            verboseln!("ip: {: <4}  ||  cmd:[{}({: <5})]  (acc: {})", self.ip, cmd.cmdtype, cmd.argument, self.acc)
         }
 
         if cmd.cmdtype == HGCCommandType::NOP {
@@ -108,13 +108,9 @@ impl Day08 {
             input: HGCProgramm::parse_program(input_str.to_owned().to_string())
         }
     }
-}
-
-impl Day08 {
+    
     fn find_loop(prog: &HGCProgramm) -> (i32, bool) {
         let mut vm = HGCMachineState::new();
-
-        //vm.trace = true;
 
         let mut visited: HashSet<usize> = HashSet::new();
         visited.insert(vm.ip);
