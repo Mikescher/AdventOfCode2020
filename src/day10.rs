@@ -1,6 +1,7 @@
 use crate::common::AdventOfCodeDay;
 
 use itertools::Itertools;
+use std::collections::HashMap;
 
 pub struct Day10 {
     input: Vec<u32>,
@@ -19,6 +20,39 @@ impl Day10 {
         Self {
             input: data
         }
+    }
+
+    fn path_count(cache: &mut HashMap<usize, u128>, list: &Vec<u32>, idx: usize) -> u128 {
+        if idx == 0 {
+            return 1;
+        }
+        if let Some(cv) = cache.get(&idx) {
+            verboseln!("(#)  {}", idx);
+            return *cv;
+        }
+
+        verboseln!("[::] {}", idx);
+
+        let mut r = 0;
+
+        let me = list[idx];
+
+        for delta in 1..4 {
+            let other_idx = idx as i32 - delta;
+
+            if other_idx < 0 {
+                continue;
+            }
+
+            let other = list[other_idx as usize];
+            if me - other <= 3 {
+                r += Day10::path_count(cache, list, other_idx as usize);
+            }
+        }
+
+        cache.insert(idx, r);
+
+        return r;
     }
 }
 
@@ -49,6 +83,22 @@ impl AdventOfCodeDay for Day10 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+
+        let max = self.input.iter().max().unwrap();
+
+        let all = self.input
+                       .iter()
+                       .chain([0, *max + 3].iter())
+                       .sorted()
+                       .map(|p| *p)
+                       .collect::<Vec<u32>>();
+
+        let mut hmap: HashMap<usize, u128> = HashMap::new();
+        //for i in 0..(all.len()) {
+        //    Day10::path_count(&mut hmap, &all, i);
+        //}
+        let total = Day10::path_count(&mut hmap, &all, all.len()-1);
+
+        return total.to_string();
     }
 }
