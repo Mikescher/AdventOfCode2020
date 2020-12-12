@@ -73,13 +73,36 @@ impl AdventOfCodeDay for Day12 {
             }
 
             verboseln!("[{},{}|{}] {:?}", x, y, d, cmd);
-
         }
 
         return (x.abs() + y.abs()).to_string();
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        
+        let mut ship_x: i32 = 0;
+        let mut ship_y: i32 = 0;
+        let mut wp_x: i32 = 10;
+        let mut wp_y: i32 = 1;
+
+        verboseln!("Ship:[{},{}] WP:[{},{}]", ship_x, ship_y, wp_x, wp_y);
+        for cmd in &self.input {
+            
+            match cmd.0 {
+                CType::North     => { wp_y += cmd.1; },
+                CType::East      => { wp_x += cmd.1; },
+                CType::South     => { wp_y -= cmd.1; },
+                CType::West      => { wp_x -= cmd.1; },
+                
+                CType::TurnLeft  => { for _ in 0..(cmd.1/90) { (wp_x, wp_y) = (-wp_y,  wp_x); } },
+                CType::TurnRight => { for _ in 0..(cmd.1/90) { (wp_x, wp_y) = ( wp_y, -wp_x); } },
+
+                CType::Forward   => { ship_x = ship_x + wp_x*cmd.1; ship_y = ship_y + wp_y*cmd.1; },
+            }
+
+            verboseln!("Ship:[{},{}] WP:[{},{}] {:?}", ship_x, ship_y, wp_x, wp_y, cmd);
+        }
+
+        return (ship_x.abs() + ship_y.abs()).to_string();
     }
 }

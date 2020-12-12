@@ -1,3 +1,5 @@
+#![feature(destructuring_assignment)]
+
 #[macro_use] mod common;
 
 mod day01;
