@@ -19,6 +19,19 @@ impl Day13 {
             input_bus: b,
         }
     }
+
+    fn ext_euclid(a: i128, b: i128) -> (i128, i128, i128) {
+        if a == 0 {
+            return (b, 0, 1);
+        }
+
+        let (gcd, x1, y1) = Day13::ext_euclid(b%a, a);
+
+        let x = y1 - (b/a) * x1;
+        let y = x1;
+        
+        return (gcd, x, y);
+    }
 }
 
 impl AdventOfCodeDay for Day13 {
@@ -41,6 +54,40 @@ impl AdventOfCodeDay for Day13 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+
+        // https://en.wikipedia.org/wiki/Chinese_remainder_theorem
+        // https://mathepedia.de/Chinesischer_Restsatz.html
+
+        let formulas = self.input_bus
+                           .iter()
+                           .enumerate()
+                           .filter(|(_,p)| p.is_some())
+                           .map(|(i,p)| (i, p.unwrap()))
+                           .map(|(i,p)| ((-(i as i128) % p as i128 + p as i128) as i128 % p as i128, p as i128))
+                           .collect::<Vec<(i128, i128)>>();
+
+        if is_verbose!() {
+            //for (i,b) in &formulas { verboseln!("t = {: <3} | {: <3}", i, b); }
+            for (i,b) in &formulas { verboseln!("t % {: <3} = {: <3}", b, i); }
+            verboseln!();
+        }
+
+        let mut m = 1;
+        for (_, mi) in &formulas { m *= mi; }
+
+
+        let mut x = 0;
+        for (ai, mi) in &formulas {
+            let (_gcd, _ri, si) = Day13::ext_euclid(*mi as i128, m / *mi as i128);
+            let ei = si * (m / *mi as i128);
+
+            x += ai * ei;
+            //dbg!(m, m / *mi as i128, ai, mi, gcd, ri, si, ei, x);
+            verboseln!();
+        }
+
+        x = ((x % m) + m) % m;
+        
+        return x.to_string() //TODO
     }
 }
