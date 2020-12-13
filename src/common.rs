@@ -19,6 +19,19 @@ macro_rules! verboseln {
     }
 }
 
+macro_rules! verbosedbg {
+    ($val:expr) => {
+        if crate::common::is_verbose() {
+            dbg!($val);
+        }
+    };
+    ($($val:expr),+ $(,)?) => {
+        if crate::common::is_verbose() {
+            dbg!($($val),+);
+        }
+    };
+}
+
 macro_rules! is_verbose {
     ($($arg:tt)*) => {
         crate::common::is_verbose()

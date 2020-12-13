@@ -67,6 +67,7 @@ impl AdventOfCodeDay for Day13 {
                            .collect::<Vec<(i128, i128)>>();
 
         if is_verbose!() {
+            verboseln!();
             //for (i,b) in &formulas { verboseln!("t = {: <3} | {: <3}", i, b); }
             for (i,b) in &formulas { verboseln!("t % {: <3} = {: <3}", b, i); }
             verboseln!();
@@ -78,11 +79,11 @@ impl AdventOfCodeDay for Day13 {
 
         let mut x = 0;
         for (ai, mi) in &formulas {
-            let (_gcd, _ri, si) = Day13::ext_euclid(*mi as i128, m / *mi as i128);
+            let (gcd, ri, si) = Day13::ext_euclid(*mi as i128, m / *mi as i128);
             let ei = si * (m / *mi as i128);
 
             x += ai * ei;
-            //dbg!(m, m / *mi as i128, ai, mi, gcd, ri, si, ei, x);
+            verbosedbg!(m, m / *mi as i128, ai, mi, gcd, ri, si, ei, x);
             verboseln!();
         }
 
