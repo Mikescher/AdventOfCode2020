@@ -56,10 +56,75 @@ impl AdventOfCodeDay for Day14 {
 
         }
 
-        return mem.iter().map(|(k,v)| v).sum::<u64>().to_string();
+        return mem.iter().map(|(_,v)| v).sum::<u64>().to_string();
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+
+        let mask_36: u64 = 0b111111_111111_111111_111111_111111_111111;
+
+        let mut addr: Vec<(u64,u64)> = Vec::with_capacity(1024);
+
+        let mut mem: HashMap<u64, u64> = HashMap::new();
+
+        for line in &self.input {
+
+            if line.starts_with("mask = ") {
+
+                let strmask = &line[7..];
+
+                let mask_set   = u64::from_str_radix(&strmask.replace("X", "0"),  2).unwrap();
+                let mask_unset = 0u64;
+
+                
+                verboseln!("{0} | {0}", strmask);
+                verboseln!("{:0>36b} | {:0>36b}", mask_set, mask_unset);
+                verboseln!();
+
+                let floats = strmask.chars().rev().enumerate().filter(|(_,v)| *v == 'X').map(|(i,_)| i).collect::<Vec<usize>>();
+
+                addr.clear();
+
+                for fmask in 0..(2u64.pow(floats.len() as u32)) {
+
+                    let mut nf_mask_set   = mask_set;
+                    let mut nf_mask_unset = mask_unset;
+
+                    let mut ii = 0;
+                    for i in &floats {
+
+                        let fbmask = 1u64 << *i;
+
+                        if fmask & (1<<ii) != 0 {
+                            nf_mask_set = nf_mask_set | fbmask;
+                        } else {
+                            nf_mask_unset = nf_mask_unset | fbmask;
+                        }
+
+                        ii += 1;
+                    }
+
+                    addr.push((nf_mask_set, nf_mask_unset));
+                    verboseln!("{:0>36b} | {:0>36b}   ( {:0>10b} )", nf_mask_set, nf_mask_unset, fmask);
+                }
+                verboseln!();
+                verboseln!();
+
+            } else if line.starts_with("mem[") {
+
+                let val_addr  = line.replace("mem[", "").replace("] =", "").split(' ').nth(0).unwrap().parse::<u64>().unwrap();
+                let val_value = line.replace("mem[", "").replace("] =", "").split(' ').nth(1).unwrap().parse::<u64>().unwrap();
+
+                for (mset,munset) in &addr {
+                    let masked_addr = ((val_addr | mset) & !munset) & mask_36;
+                    mem.insert(masked_addr, val_value);
+                }
+                
+                verboseln!("Write into {} mems", addr.len());
+                verboseln!();
+            }
+        }
+
+        return mem.iter().map(|(_,v)| v).sum::<u64>().to_string();
     }
 }
