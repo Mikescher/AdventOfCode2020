@@ -44,6 +44,12 @@ fn main() {
                    sysargs.iter().skip(1).any(|p| p == "--bench") || 
                    sysargs.iter().skip(1).any(|p| p == "-b");
 
+    let is_timed = sysargs.iter().skip(1).any(|p| p == "--stopwatch") || 
+                   sysargs.iter().skip(1).any(|p| p == "--timed") || 
+                   sysargs.iter().skip(1).any(|p| p == "--time") || 
+                   sysargs.iter().skip(1).any(|p| p == "--sw") || 
+                   sysargs.iter().skip(1).any(|p| p == "-t");
+
     let is_verbose = sysargs.iter().skip(1).any(|p| p == "--verbose") || 
                      sysargs.iter().skip(1).any(|p| p == "-v");
 
@@ -51,7 +57,7 @@ fn main() {
 
     common::PRINT_VERBOSE.store(is_verbose && !is_bench, std::sync::atomic::Ordering::Relaxed);
 
-    if args.len() > 0 && (args[0] == "help" || is_help) {
+    if (args.len() > 0 && args[0] == "help") || is_help {
         print_help();
         return;
     }
@@ -63,12 +69,12 @@ fn main() {
 
         let day = input_int("Day");
         let tsk = input_int("Task");
-        run_normal(day, tsk, false);
+        run_normal(day, tsk, is_bench, is_timed && !is_bench);
         return;
     }
     
     if args.len() == 1 && args[0] == "all" {
-        for i in 1..26 { run_normal(i, -1, is_bench); }
+        for i in 1..26 { run_normal(i, -1, is_bench, is_timed && !is_bench); }
         return;
     } 
     
@@ -79,14 +85,14 @@ fn main() {
     
     if args.len() == 1 {
         let day = args[0].parse::<i32>().expect("could not parse param_1");
-        run_normal(day, -1, is_bench);
+        run_normal(day, -1, is_bench, is_timed && !is_bench);
         return;
     } 
     
     if args.len() == 2 {
         let day = args[0].parse::<i32>().expect("could not parse param_1");
         let tsk = args[1].parse::<i32>().expect("could not parse param_2");
-        run_normal(day, tsk, is_bench);
+        run_normal(day, tsk, is_bench, is_timed && !is_bench);
         return;
     }
     
@@ -109,15 +115,20 @@ fn print_help() {
     println!("  -h --help");
     println!("  -b --benchmark");
     println!("  -v --verbose");
+    println!("  -t --time");
 }
 
-fn run_normal(day: i32, tsk: i32, benchmark: bool) {
+fn run_normal(day: i32, tsk: i32, benchmark: bool, timed: bool) {
     if tsk == -1 || tsk == 1 { 
-        if benchmark { run_benchmark(day, 1); } else { run_single(day, 1); }
+        if benchmark { run_benchmark(day, 1); } 
+        if timed { run_timed(day, 1); }
+        else { run_single(day, 1); }
     }
 
     if (tsk == -1 && day != 25) || tsk == 2 { 
-        if benchmark { run_benchmark(day, 2); } else { run_single(day, 2); }
+        if benchmark { run_benchmark(day, 2); }
+        if timed { run_timed(day, 2); }
+        else { run_single(day, 2); }
     }
 }
 
@@ -133,6 +144,31 @@ fn run_single(day: i32, tsk: i32) {
     } else {
         panic!();
     }
+}
+
+fn run_timed(day: i32, tsk: i32) {
+    use std::time::*;
+
+    if day == 25 && tsk == 2 { panic!("No day 25 - Task 2"); }
+
+    let dat = get_day(day);
+
+    let swatch = Instant::now();
+    if tsk == 1 {
+        println!("Day {:0>2} - Task 1: {}", day, dat.task_1());
+    } else if tsk == 2 {
+        println!("Day {:0>2} - Task 2: {}", day, dat.task_2());
+    } else {
+        panic!();
+    }
+
+    let d = swatch.elapsed();
+    if d.as_millis() < 8 {
+        println!("  Time: {: >5} ns ({:.3} seconds)", d.as_micros(), d.as_secs_f32());
+    } else {
+        println!("  Time: {: >5} ms ({:.3} seconds)", d.as_millis(), d.as_secs_f32());
+    }
+
 }
 
 fn run_benchmark(day: i32, tsk: i32) {
