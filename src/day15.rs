@@ -68,18 +68,13 @@ impl Iterator for MemoryIterator {
             
             self.last_number = 0;
 
-            if self.history.contains_key(&self.last_number) {
-                
-                let (_, nprev_2) = self.history.get(&self.last_number).unwrap().clone();
-
-                verboseln!("  > history.insert({}, [{}, {}])", self.last_number, nprev_2, curr_pos);
-                self.history.insert(self.last_number, (nprev_2, curr_pos));
-
+            if let Some((nprev_1, nprev_2)) = self.history.get_mut(&self.last_number) {
+                verboseln!("  > history.insert({}, [{}, {}]) [in-mem]", self.last_number, nprev_2, curr_pos);
+                *nprev_1 = *nprev_2;
+                *nprev_2 = curr_pos;
             } else {
-                
                 verboseln!("  > history.insert({}, [{}, {}])", self.last_number, 0, curr_pos);
                 self.history.insert(self.last_number, (0, curr_pos));
-
             }
 
             verboseln!("FirstTime : {}", self.last_number);
@@ -89,18 +84,13 @@ impl Iterator for MemoryIterator {
 
             self.last_number = (prev_2 - prev_1) as u32;
 
-            if self.history.contains_key(&self.last_number) {
-                
-                let (_, nprev_2) = self.history.get(&self.last_number).unwrap().clone();
-
-                verboseln!("  > history.insert({}, [{}, {}])", self.last_number, nprev_2, curr_pos);
-                self.history.insert(self.last_number, (nprev_2, curr_pos));
-
+            if let Some((nprev_1, nprev_2)) = self.history.get_mut(&self.last_number) {
+                verboseln!("  > history.insert({}, [{}, {}]) [in-mem]", self.last_number, nprev_2, curr_pos);
+                *nprev_1 = *nprev_2;
+                *nprev_2 = curr_pos;
             } else {
-                
                 verboseln!("  > history.insert({}, [{}, {}])", self.last_number, 0, curr_pos);
                 self.history.insert(self.last_number, (0, curr_pos));
-
             }
             
             verboseln!("Repeating : {} - {} = {}", prev_2, prev_1, self.last_number);
@@ -120,6 +110,6 @@ impl AdventOfCodeDay for Day15 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        return MemoryIterator::new(self.input.clone()).skip(30_000_000 - 1).next().unwrap().to_string();
     }
 }
