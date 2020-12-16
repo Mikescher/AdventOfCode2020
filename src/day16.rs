@@ -1,15 +1,13 @@
 use crate::common::AdventOfCodeDay;
 
-use itertools::Itertools;
-
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 pub struct Day16 {
     rules: Vec<Rule>,
     ticket: RawTicketData,
     nearby: Vec<RawTicketData>,
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct Rule {
     name: String,
     ranges: Vec<(i32, i32)>,
@@ -21,7 +19,7 @@ impl Rule {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug,Clone)]
 struct RawTicketData {
     fields: Vec<i32>,
 }
@@ -40,9 +38,8 @@ impl Day16 {
 
         let mut rules: Vec<Rule> = Vec::new();
         loop {
-            i+=1;
             let line = lines[i].clone();
-            if line == "" { i+=1; break; }
+            if line == "" { i+=1; i+=1; break; }
 
             let s1 = line.split(": ").collect::<Vec<&str>>();
             let name = s1[0].to_owned();
@@ -58,24 +55,27 @@ impl Day16 {
             rules.push(Rule {
                 name: name,
                 ranges: vec![ range1, range2 ],
-            })
+            });
+            
+            i+=1;
         }
 
-        i+=1;
         let myticket = RawTicketData {
             fields: lines[i].split(',').map(|p| p.parse::<i32>().unwrap()).collect(),
         };
+        i+=1;
         
         i+=1;
         i+=1;
 
         let mut nearbytickets: Vec<RawTicketData> = Vec::new();
-        while i+1 < lines.len() {
-            i+=1;
+        while i < lines.len() {
 
             nearbytickets.push(RawTicketData {
                 fields: lines[i].split(',').map(|p| p.parse::<i32>().unwrap()).collect(),
             });
+            
+            i+=1;
         }
 
         Self {
@@ -98,6 +98,63 @@ impl AdventOfCodeDay for Day16 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        
+        let valid = self.nearby
+                        .iter()
+                        .filter(|p| p.fields.iter().all(|f| self.rules.iter().any(|r| r.matches(*f))))
+                        .map(|p| p.clone())
+                        .collect::<Vec<RawTicketData>>();
+
+        let mut candidates: Vec<(Rule, Vec<usize>)>;
+        candidates = self.rules
+                         .iter()
+                         .map(|rule| (rule.clone(), (0..self.ticket.fields.len())
+                           .filter(|i| rule.matches(self.ticket.fields[*i]))
+                           .filter(|i| valid.iter().all(|d| rule.matches(d.fields[*i]) ) )
+                           .map(|p| p.clone())
+                           .collect::<Vec<usize>>()))
+                         .collect::<Vec<(Rule, Vec<usize>)>>();
+
+        verboseln!();
+        if is_verbose!() { for c in &candidates { verboseln!("{}: {:?}", c.0.name, c.1); } }
+        verboseln!();
+
+        while candidates.iter().any(|c| c.1.len() != 1) {
+
+            let rm = candidates.iter()
+                               .filter(|c| c.1.len() == 1)
+                               .flat_map(|p| p.1.iter())
+                               .filter(|p| candidates.iter().filter(|c| c.1.contains(p)).count() > 1)
+                               .map(|p|p.clone())
+                               .collect::<Vec<usize>>();
+
+            // Field {rm} is teh single candidate of a rule and so it can not be a candidate for any other rule
+            verboseln!("Remove {:?}", rm);
+            for c in candidates.iter_mut().filter(|c| c.1.len() > 1) { c.1.retain(|v| !rm.contains(v) ); }
+
+            let unique = (0..self.ticket.fields.len())
+                              .filter(|i| candidates.iter().filter(|c| c.1.contains(i)).count() == 1)
+                              .filter(|i| candidates.iter().filter(|c| c.1.contains(i) && c.1.len() > 1).count() == 1)
+                              .map(|p|p.clone())
+                              .collect::<Vec<usize>>();
+                            
+            // Field {uniq} only appears in one rule and so it must be the candidate for that rule
+            verboseln!("Clean {:?}", unique);
+            for ui in &unique {
+                for c in candidates.iter_mut().filter(|c| c.1.contains(ui)) { c.1.retain(|v| v == ui ); }
+            }
+        }
+
+        verboseln!();
+        if is_verbose!() { for c in &candidates { verboseln!("{}: {:?} => {}", c.0.name, c.1, self.ticket.fields[c.1[0]]); } }
+        verboseln!();
+
+        return candidates.iter()
+                         .filter(|c| c.0.name.starts_with("departure"))
+                         .map(|c| c.1[0])
+                         .map(|i| self.ticket.fields[i])
+                         .map(|v| v as u128)
+                         .fold(1, |a,b| a*b)
+                         .to_string();
     }
 }
