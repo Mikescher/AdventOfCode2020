@@ -180,7 +180,7 @@ fn run_benchmark(day: i32, tsk: i32) {
     let swatch = Instant::now();
     let mut count = 0;
 
-    let mut times : Vec<Duration> = Vec::with_capacity(2048);
+    let mut times : Vec<Duration> = Vec::with_capacity(16384);
 
     loop {
         let swatch_inner = Instant::now();
@@ -190,7 +190,7 @@ fn run_benchmark(day: i32, tsk: i32) {
         times.push(swatch_inner.elapsed());
 
         let elapsed = swatch.elapsed();
-        if (count > 2 && elapsed.as_millis() > 16_000) || (count > 256 && elapsed.as_millis() > 5_000) || count > 2000 {
+        if (count > 2 && elapsed.as_millis() > 16_384) || (count > 256 && elapsed.as_millis() > 4_096) || (count > 8_192 && elapsed.as_millis() > 2_048) {
             break;
         }
     }
