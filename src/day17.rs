@@ -23,257 +23,249 @@ impl Day17 {
     }
 }
 
-struct PocketUniverse3D {
-    state: HashMap<(i32, i32, i32), (bool, bool)>
+trait DimensionalCoord {
+    fn zero() -> Self;
+    
+    fn componentwise_min(&self, other: Self) -> Self;
+    fn componentwise_max(&self, other: Self) -> Self;
+
+    fn inc_all(&mut self, delta: i32);
+    fn iter_neighbours<F>(&self, fun: F) where F: FnMut(Self), Self: Sized;
+
+    fn iter_all_coords_inclusive<F>(min: Self, max: Self, fun: F) where F: FnMut(Self), Self: Sized;
 }
 
-impl PocketUniverse3D {
-    pub fn new() -> Self {
+#[derive(PartialEq, Eq, std::hash::Hash, Clone, Copy)]
+struct Coord3D {
+    x: i32,
+    y: i32,
+    z: i32,
+}
+
+impl DimensionalCoord for Coord3D {
+    fn zero() -> Self {
         Self {
-            state: HashMap::with_capacity(8192),
+            x: 0,
+            y: 0,
+            z: 0,
         }
     }
 
-    fn step(&mut self) {
-        let mut min_x = 0;
-        let mut min_y = 0;
-        let mut min_z = 0;
-        let mut max_x = 0;
-        let mut max_y = 0;
-        let mut max_z = 0;
-
-        for ((k_x, k_y, k_z), (v_old, v_curr)) in self.state.iter_mut() {
-            *v_old = *v_curr;
-
-            if *k_x < min_x { min_x = *k_x; }
-            if *k_y < min_y { min_y = *k_y; }
-            if *k_z < min_z { min_z = *k_z; }
-
-            if *k_x > max_x { max_x = *k_x; }
-            if *k_y > max_y { max_y = *k_y; }
-            if *k_z > max_z { max_z = *k_z; }
-        }
-
-        for x in (min_x-1)..=(max_x+1) {
-            for y in (min_y-1)..=(max_y+1) {
-                for z in (min_z-1)..=(max_z+1) {
-                    self.step_single(x, y, z);
-                }
-            }
+    fn componentwise_min(&self, other: Self) -> Self {
+        Self {
+            x: if self.x < other.x { self.x } else { other.x },
+            y: if self.y < other.y { self.y } else { other.y },
+            z: if self.z < other.z { self.z } else { other.z },
         }
     }
 
-    fn step_single(&mut self, x: i32, y: i32, z: i32) {
-
-        let nbc = self.get_neighbours_old(x, y, z);
-
-        if self.get_old(x,y,z) {
-
-            if nbc == 2 || nbc == 3 {
-                // stay active
-            } else {
-                self.set_new(x, y, z, false);
-            }
-
-        } else {
-
-            if nbc == 3 {
-                self.set_new(x, y, z, true);
-            } else {
-                // remain inactive
-            }
-
+    fn componentwise_max(&self, other: Self) -> Self {
+        Self {
+            x: if self.x > other.x { self.x } else { other.x },
+            y: if self.y > other.y { self.y } else { other.y },
+            z: if self.z > other.z { self.z } else { other.z },
         }
     }
 
-    fn get_old(&self, x: i32, y: i32, z: i32) -> bool {
-        if let Some((v_old, _)) = self.state.get(&(x,y,z)) {
-            return *v_old;
-        }
-        return false;
+    fn inc_all(&mut self, delta: i32) {
+        self.x += delta;
+        self.y += delta;
+        self.z += delta;
     }
 
-    fn get_new(&self, x: i32, y: i32, z: i32) -> bool {
-        if let Some((_, v_new)) = self.state.get(&(x,y,z)) {
-            return *v_new;
-        }
-        return false;
-    }
-
-    fn get_neighbours_old(&self, x: i32, y: i32, z: i32) -> i32 {
-        let mut c = 0;
-
+    fn iter_neighbours<F>(&self, mut fun: F) where F: FnMut(Self) {
         for dx in -1..=1 {
             for dy in -1..=1 {
                 for dz in -1..=1 {
-                    if dx==0 && dy==0 && dz==0 {
-                        continue;
-                    }
-                    if self.get_old(x+dx, y+dy, z+dz) {
-                        c+=1;
-                    }
+                    if dx==0 && dy==0 && dz==0 { continue; }
+                    fun(Coord3D::new(self.x+dx, self.y+dy, self.z+dz));
                 }
             }
         }
 
-        return c;
     }
 
-    fn set_new(&mut self, x: i32, y: i32, z: i32, v: bool) {
-        if let Some((_, v_new)) = self.state.get_mut(&(x,y,z)) {
-            *v_new = v;
-        } else {
-            self.state.insert((x,y,z), (false, v));
-        }
-    }
-
-    fn print_verbose(&self) {
-        let mut min_x = 0;
-        let mut min_y = 0;
-        let mut min_z = 0;
-        let mut max_x = 0;
-        let mut max_y = 0;
-        let mut max_z = 0;
-
-        for ((k_x, k_y, k_z), (_, _)) in self.state.iter() {
-            if *k_x < min_x { min_x = *k_x; }
-            if *k_y < min_y { min_y = *k_y; }
-            if *k_z < min_z { min_z = *k_z; }
-
-            if *k_x > max_x { max_x = *k_x; }
-            if *k_y > max_y { max_y = *k_y; }
-            if *k_z > max_z { max_z = *k_z; }
-        }
-
-        for z in min_z..=max_z {
-            verboseln!("z={}", z);
-            for y in min_y..=max_y {
-                let mut str = String::with_capacity((max_x - min_x + 2) as usize);
-                for x in min_x..=max_x {
-                    if self.get_new(x, y, z) {
-                        str.push_str("#");
-                    } else {
-                        str.push_str(".");
-                    }
+    fn iter_all_coords_inclusive<F>(min: Self, max: Self, mut fun: F) where F: FnMut(Self) {
+        for x in min.x..=max.x {
+            for y in min.y..=max.y {
+                for z in min.z..=max.z {
+                    fun(Coord3D::new(x, y, z));
                 }
-                verboseln!("{}", str);
             }
-            verboseln!();
         }
-
     }
 }
 
-struct PocketUniverse4D {
-    state: HashMap<(i32, i32, i32, i32), (bool, bool)>
-}
-
-impl PocketUniverse4D {
-    pub fn new() -> Self {
+impl Coord3D {
+    fn new(x:i32, y:i32, z:i32) -> Self {
         Self {
-            state: HashMap::with_capacity(8192),
+            x,
+            y,
+            z,
+        }
+    }
+}
+#[derive(PartialEq, Eq, std::hash::Hash, Clone, Copy)]
+struct Coord4D {
+    x: i32,
+    y: i32,
+    z: i32,
+    w: i32,
+}
+
+impl DimensionalCoord for Coord4D {
+    fn zero() -> Self {
+        Self {
+            x: 0,
+            y: 0,
+            z: 0,
+            w: 0,
         }
     }
 
-    fn step(&mut self) {
-        let mut min_x = 0;
-        let mut min_y = 0;
-        let mut min_z = 0;
-        let mut min_w = 0;
-        let mut max_x = 0;
-        let mut max_y = 0;
-        let mut max_z = 0;
-        let mut max_w = 0;
-
-        for ((k_x, k_y, k_z, k_w), (v_old, v_curr)) in self.state.iter_mut() {
-            *v_old = *v_curr;
-
-            if *k_x < min_x { min_x = *k_x; }
-            if *k_y < min_y { min_y = *k_y; }
-            if *k_z < min_z { min_z = *k_z; }
-            if *k_w < min_w { min_w = *k_w; }
-
-            if *k_x > max_x { max_x = *k_x; }
-            if *k_y > max_y { max_y = *k_y; }
-            if *k_z > max_z { max_z = *k_z; }
-            if *k_w > max_w { max_w = *k_w; }
-        }
-
-        for x in (min_x-1)..=(max_x+1) {
-            for y in (min_y-1)..=(max_y+1) {
-                for z in (min_z-1)..=(max_z+1) {
-                    for w in (min_w-1)..=(max_w+1) {
-                        self.step_single(x, y, z, w);
-                    }
-                }
-            }
+    fn componentwise_min(&self, other: Self) -> Self {
+        Self {
+            x: if self.x < other.x { self.x } else { other.x },
+            y: if self.y < other.y { self.y } else { other.y },
+            z: if self.z < other.z { self.z } else { other.z },
+            w: if self.w < other.w { self.w } else { other.w },
         }
     }
 
-    fn step_single(&mut self, x: i32, y: i32, z: i32, w: i32) {
-
-        let nbc = self.get_neighbours_old(x, y, z, w);
-
-        if self.get_old(x,y,z,w) {
-
-            if nbc == 2 || nbc == 3 {
-                // stay active
-            } else {
-                self.set_new(x, y, z, w, false);
-            }
-
-        } else {
-
-            if nbc == 3 {
-                self.set_new(x, y, z, w, true);
-            } else {
-                // remain inactive
-            }
-
+    fn componentwise_max(&self, other: Self) -> Self {
+        Self {
+            x: if self.x > other.x { self.x } else { other.x },
+            y: if self.y > other.y { self.y } else { other.y },
+            z: if self.z > other.z { self.z } else { other.z },
+            w: if self.w > other.w { self.w } else { other.w },
         }
     }
 
-    fn get_old(&self, x: i32, y: i32, z: i32, w: i32) -> bool {
-        if let Some((v_old, _)) = self.state.get(&(x,y,z,w)) {
-            return *v_old;
-        }
-        return false;
+    fn inc_all(&mut self, delta: i32) {
+        self.x += delta;
+        self.y += delta;
+        self.z += delta;
+        self.w += delta;
     }
 
-    fn get_new(&self, x: i32, y: i32, z: i32, w: i32) -> bool {
-        if let Some((_, v_new)) = self.state.get(&(x,y,z,w)) {
-            return *v_new;
-        }
-        return false;
-    }
-
-    fn get_neighbours_old(&self, x: i32, y: i32, z: i32, w: i32) -> i32 {
-        let mut c = 0;
-
+    fn iter_neighbours<F>(&self, mut fun: F) where F: FnMut(Self) {
         for dx in -1..=1 {
             for dy in -1..=1 {
                 for dz in -1..=1 {
                     for dw in -1..=1 {
-                        if dx==0 && dy==0 && dz==0 && dw==0 {
-                            continue;
-                        }
-                        if self.get_old(x+dx, y+dy, z+dz, w+dw) {
-                            c+=1;
-                        }
+                        if dx==0 && dy==0 && dz==0 && dw==0 { continue; }
+                        fun(Coord4D::new(self.x+dx, self.y+dy, self.z+dz, self.w+dw));
                     }
                 }
             }
         }
 
-        return c;
     }
 
-    fn set_new(&mut self, x: i32, y: i32, z: i32, w: i32, v: bool) {
-        if let Some((_, v_new)) = self.state.get_mut(&(x,y,z,w)) {
+    fn iter_all_coords_inclusive<F>(min: Self, max: Self, mut fun: F) where F: FnMut(Self) {
+        for x in min.x..=max.x {
+            for y in min.y..=max.y {
+                for z in min.z..=max.z {
+                    for w in min.w..=max.w {
+                        fun(Coord4D::new(x, y, z, w));
+                    }
+                }
+            }
+        }
+    }
+}
+
+impl Coord4D {
+    fn new(x:i32, y:i32, z:i32, w:i32) -> Self {
+        Self {
+            x,
+            y,
+            z,
+            w,
+        }
+    }
+}
+
+struct PocketUniverse<TCoord: DimensionalCoord + Eq + std::hash::Hash + Clone + Copy> {
+    state: HashMap<TCoord, (bool, bool)>
+}
+
+impl<TCoord: DimensionalCoord + Eq + std::hash::Hash + Clone + Copy> PocketUniverse<TCoord> {
+    pub fn new() -> Self {
+        Self {
+            state: HashMap::with_capacity(8192),
+        }
+    }
+
+    fn step(&mut self) {
+        let mut min_coord = TCoord::zero();
+        let mut max_coord = TCoord::zero();
+
+        for (c, (v_old, v_curr)) in self.state.iter_mut() {
+            *v_old = *v_curr;
+
+            min_coord = min_coord.componentwise_min(*c);
+            max_coord = max_coord.componentwise_max(*c);
+        }
+        
+        min_coord.inc_all(-1);
+        max_coord.inc_all(1);
+
+        TCoord::iter_all_coords_inclusive(min_coord.clone(), max_coord.clone(), |c| self.step_single(c));
+    }
+
+    fn step_single(&mut self, c: TCoord) {
+
+        let nbc = self.get_neighbours_old(c);
+
+        if self.get_old(c) {
+
+            if nbc == 2 || nbc == 3 {
+                // stay active
+            } else {
+                self.set_new(c, false);
+            }
+
+        } else {
+
+            if nbc == 3 {
+                self.set_new(c, true);
+            } else {
+                // remain inactive
+            }
+
+        }
+    }
+
+    fn get_old(&self, c: TCoord) -> bool {
+        if let Some((v_old, _)) = self.state.get(&c) {
+            return *v_old;
+        }
+        return false;
+    }
+
+    fn get_neighbours_old(&self, c: TCoord) -> i32 {
+        let mut count = 0;
+
+        c.iter_neighbours(|c| {
+            if self.get_old(c) {
+                count+=1;
+            }
+        });
+
+        return count;
+    }
+
+    fn set_new(&mut self, c: TCoord, v: bool) {
+        if let Some((_, v_new)) = self.state.get_mut(&c) {
             *v_new = v;
         } else {
-            self.state.insert((x,y,z,w), (false, v));
+            self.state.insert(c, (false, v));
         }
+    }
+
+    fn count_active_new(&self) -> i32 {
+        return self.state.iter().filter(|(_,v)| v.1).count() as i32;
     }
 }
 
@@ -281,46 +273,40 @@ impl AdventOfCodeDay for Day17 {
 
     fn task_1(&self) -> String {
 
-        let mut pu = PocketUniverse3D::new();
+        let mut pock_uni = PocketUniverse::<Coord3D>::new();
 
         for x in 0..self.width {
             for y in 0..self.height {
-                pu.state.insert((x,y,0), (false, self.input[y as usize][x as usize]));
+                pock_uni.state.insert(Coord3D::new(x,y,0), (false, self.input[y as usize][x as usize]));
             }
         }
 
-        if is_verbose!() {
-            verboseln!("After 0 cycles:");
-            verboseln!();
-            pu.print_verbose();
-        }
+        verboseln!("After 0 cycles:");
+        verboseln!("{}", pock_uni.count_active_new());
+        verboseln!();
 
         for i in 0..6 {
-            pu.step();
-
-            if is_verbose!() {
-                verboseln!("After {} cycles:", i+1);
-                verboseln!();
-                pu.print_verbose();
-            }
+            pock_uni.step();
+            
+            verboseln!("After {} cycles:", i+1);
+            verboseln!("{}", pock_uni.count_active_new());
+            verboseln!();
         }
 
-        return pu.state.iter().filter(|(_,v)| v.1).count().to_string();
+        return pock_uni.count_active_new().to_string();
     }
 
     fn task_2(&self) -> String  {
-        let mut pu = PocketUniverse4D::new();
+        let mut pock_uni = PocketUniverse::<Coord4D>::new();
 
         for x in 0..self.width {
             for y in 0..self.height {
-                pu.state.insert((x,y,0,0), (false, self.input[y as usize][x as usize]));
+                pock_uni.state.insert(Coord4D::new(x,y,0,0), (false, self.input[y as usize][x as usize]));
             }
         }
 
-        for i in 0..6 {
-            pu.step();
-        }
+        for _ in 0..6 { pock_uni.step(); }
 
-        return pu.state.iter().filter(|(_,v)| v.1).count().to_string();
+        return pock_uni.count_active_new().to_string();
     }
 }
