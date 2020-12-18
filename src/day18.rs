@@ -18,12 +18,14 @@ impl Day18 {
             input: lines
         }
     }
+}
 
-    fn full_eval(formula: String) -> i64 {
-        return Self::eval(&formula.chars().filter(|p| *p != ' ').collect(), 0).0;
+impl Day18 {
+    fn full_eval_lin(formula: String) -> i64 {
+        return Self::eval_lin(&formula.chars().filter(|p| *p != ' ').collect(), 0).0;
     }
 
-    fn eval(formula: &Vec<char>, start_idx: usize) -> (i64, usize) {
+    fn eval_lin(formula: &Vec<char>, start_idx: usize) -> (i64, usize) {
 
         let mut curr: i64 = 0;
 
@@ -42,7 +44,7 @@ impl Day18 {
 
             let param: i64;
             if formula[i] == '(' {
-                (param, i) = Self::eval(formula, i+1);
+                (param, i) = Self::eval_lin(formula, i+1);
             } else {
                 param = formula[i].to_string().parse::<i64>().unwrap();
                 i += 1;
@@ -57,21 +59,98 @@ impl Day18 {
     }
 }
 
+impl Day18 {
+    // Shunting-yard Algorithm
+    fn eval_advanced(formula: String) -> i64 {
+        let mut operands: Vec<i64> = Vec::new();
+        let mut operators: Vec<char> = Vec::new();
+
+        for chr in formula.chars().filter(|p| *p != ' ') {
+            if chr == '*' || chr == '+' {
+
+                while !operators.is_empty() && chr <= *operators.last().unwrap() {
+                    let a = operands.pop().unwrap();
+                    let b = operands.pop().unwrap();
+                    let op = operators.pop().unwrap();
+                    
+                    operands.push(match op {
+                        '+' => a+b,
+                        '*' => a*b,
+                        _   => panic!(),
+                    });
+                }
+
+                operators.push(chr);
+
+            } else if chr == '(' {
+                
+                operators.push(chr);
+                
+            } else if chr >= '0' && chr <= '9' {
+                
+                operands.push(chr.to_string().parse().unwrap());
+                
+            } else if chr == ')' {
+
+                while *operators.last().unwrap() != '(' {
+                    let a = operands.pop().unwrap();
+                    let b = operands.pop().unwrap();
+                    let op = operators.pop().unwrap();
+                    
+                    operands.push(match op {
+                        '+' => a+b,
+                        '*' => a*b,
+                        _   => panic!(),
+                    });
+                }
+                operators.pop();
+
+            } else {
+
+                panic!();
+
+            }
+        }
+        
+        while !operators.is_empty() {
+            let a = operands.pop().unwrap();
+            let b = operands.pop().unwrap();
+            let op = operators.pop().unwrap();
+            
+            operands.push(match op {
+                '+' => a+b,
+                '*' => a*b,
+                _   => panic!(),
+            });
+        }
+
+        return operands.pop().unwrap();
+    }
+}
+
 impl AdventOfCodeDay for Day18 {
 
     fn task_1(&self) -> String {
 
         if is_verbose!() {
             for line in &self.input {
-                verboseln!("{}   :=   {:?}", line, Day18::full_eval(line.to_owned()));
+                verboseln!("{}   :=   {:?}", line, Day18::full_eval_lin(line.to_owned()));
             }
         }
 
-        return self.input.iter().map(|p| Day18::full_eval(p.to_owned())).sum::<i64>().to_string();
+        return self.input.iter().map(|p| Day18::full_eval_lin(p.to_owned())).sum::<i64>().to_string();
 
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+
+        if is_verbose!() {
+            for line in &self.input {
+                verboseln!("{}   :=   {:?}", line, Day18::eval_advanced(line.to_owned()));
+            }
+        }
+
+        return self.input.iter().map(|p| Day18::eval_advanced(p.to_owned())).sum::<i64>().to_string();
+
     }
 }
