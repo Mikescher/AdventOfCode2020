@@ -8,6 +8,7 @@ pub struct Day19 {
     input: Vec<String>,
 }
 
+#[derive(Debug, Clone)]
 enum Rule {
     RuleExpand(Vec<u32>),
     RuleSplit(Vec<u32>, Vec<u32>),
@@ -62,39 +63,39 @@ impl Day19 {
         panic!();
     }
 
-    fn check_rule(&self, str: Vec<char>, exp: Vec<u32>) -> bool {
+    fn check_rule(rules: &HashMap<u32, Rule>, str: Vec<char>, exp: Vec<u32>) -> bool {
 
         if str.len() == 0 && exp.len() == 0 { return true; }
         
         if str.len() == 0 || exp.len() == 0 { return false; }
 
-        let r = self.rules.get(&exp[0]).unwrap();
+        let r = rules.get(&exp[0]).unwrap();
 
         match r {
             Rule::RuleLiteral(rchr) => {
                 if *rchr != str[0] { return false; }
                 let str_sub = str.iter().skip(1).map(|p| *p).collect::<Vec<char>>();
                 let exp_sub = exp.iter().skip(1).map(|p| *p).collect::<Vec<u32>>();
-                return self.check_rule(str_sub, exp_sub);
+                return Self::check_rule(rules, str_sub, exp_sub);
             }
 
             Rule::RuleExpand(rexp) => {
                 let str_sub = str.clone();
                 let mut exp_sub = rexp.clone();
                 exp_sub.extend(exp.iter().skip(1).map(|p| *p));
-                return self.check_rule(str_sub, exp_sub);
+                return Self::check_rule(rules, str_sub, exp_sub);
             }
 
             Rule::RuleSplit(rexp1, rexp2) => {
                 let str_sub1 = str.clone();
                 let mut exp_sub1 = rexp1.clone();
                 exp_sub1.extend(exp.iter().skip(1).map(|p| *p));
-                if self.check_rule(str_sub1, exp_sub1) { return true; }
+                if Self::check_rule(rules, str_sub1, exp_sub1) { return true; }
                 
                 let str_sub2 = str.clone();
                 let mut exp_sub2 = rexp2.clone();
                 exp_sub2.extend(exp.iter().skip(1).map(|p| *p));
-                if self.check_rule(str_sub2, exp_sub2) { return true; }
+                if Self::check_rule(rules, str_sub2, exp_sub2) { return true; }
 
                 return false;
             }
@@ -106,11 +107,18 @@ impl AdventOfCodeDay for Day19 {
 
     fn task_1(&self) -> String {
 
-        return self.input.iter().filter(|v| self.check_rule(v.chars().collect(), vec![0]) ).count().to_string();
+        return self.input.iter().filter(|v| Day19::check_rule(&self.rules, v.chars().collect(), vec![0]) ).count().to_string();
 
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+
+        let mut rules = self.rules.clone();
+
+        rules.insert(8, Rule::RuleSplit(vec![42], vec![42, 8]));
+        rules.insert(11, Rule::RuleSplit(vec![42, 31], vec![42, 11, 31]));
+
+        return self.input.iter().filter(|v| Day19::check_rule(&rules, v.chars().collect(), vec![0]) ).count().to_string();
+
     }
 }
