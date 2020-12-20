@@ -86,26 +86,10 @@ enum Transform {
     RotCW270Flipped,
 }
 
-impl Transform {
-    fn cw(&self) -> Self {
-        match self {
-            Self::None     => Self::RotCW090,
-            Self::RotCW090 => Self::RotCW180,
-            Self::RotCW180 => Self::RotCW270,
-            Self::RotCW270 => Self::None,
-
-            Self::Flipped         => Self::RotCW090Flipped, 
-            Self::RotCW090Flipped => Self::RotCW180Flipped,
-            Self::RotCW180Flipped => Self::RotCW270Flipped,
-            Self::RotCW270Flipped => Self::Flipped,
-        }
-    }
-}
-
 struct Tile {
     id: u32,
     bitmap: [[bool;10];10],
-    sides: HashMap<(Compass, bool), [bool;10]>,
+    sides: HashMap<(Compass, bool), (u32,u32)>,
 }
 
 pub struct Day20 {
@@ -214,19 +198,14 @@ impl Day20 {
         let s1 = left.0.get_side_after_transform(Compass::East, left.1);
         let s2 = right.0.get_side_after_transform(Compass::West, right.1);
 
-        return Self::side_eq_flipped(s1, s2);
+        return s1.0 == s2.1;
     }
 
     fn is_valid_neigbour_vert(top: &(&Tile, Transform), bottom: &(&Tile, Transform)) -> bool {
         let s1 = top.0.get_side_after_transform(Compass::South, top.1);
         let s2 = bottom.0.get_side_after_transform(Compass::North, bottom.1);
 
-        return Self::side_eq_flipped(s1, s2);
-    }
-
-    fn side_eq_flipped(s1: &[bool;10], s2: &[bool;10]) -> bool {
-        for i in 0..10 { if s1[i] != s2[9-i] { return false; } }
-        return true;
+        return s1.0 == s2.1;
     }
 
     fn is_valid_candidate(x: usize, y: usize, tile: &Tile, transform: Transform, map: &HashMap::<(usize, usize), Vec<(&Tile, Transform)>>) -> bool {
@@ -274,36 +253,12 @@ impl Day20 {
                               .flat_map(|(t,s)| s.iter().map(|tf| (t, *tf)).collect::<Vec<(&Tile, Transform)>>() )
                               .collect::<Vec<(&Tile, Transform)>>();
 
-        let corners_tr = tiles.iter()
-                              .map(|t| (t, t.matching_sides(&tiles)))
-                              .filter(|(_,s)| s.len()==2)
-                              .map(|(t,s)| (*t, Self::corner_to_transform_tl(s)))
-                              .flat_map(|(t,s)| s.iter().map(|tf| (t, tf.cw())).collect::<Vec<(&Tile, Transform)>>() )
-                              .collect::<Vec<(&Tile, Transform)>>();
-
-        let corners_br = tiles.iter()
-                              .map(|t| (t, t.matching_sides(&tiles)))
-                              .filter(|(_,s)| s.len()==2)
-                              .map(|(t,s)| (*t, Self::corner_to_transform_tl(s)))
-                              .flat_map(|(t,s)| s.iter().map(|tf| (t, tf.cw().cw())).collect::<Vec<(&Tile, Transform)>>() )
-                              .collect::<Vec<(&Tile, Transform)>>();
-
-        let corners_bl = tiles.iter()
-                              .map(|t| (t, t.matching_sides(&tiles)))
-                              .filter(|(_,s)| s.len()==2)
-                              .map(|(t,s)| (*t, Self::corner_to_transform_tl(s)))
-                              .flat_map(|(t,s)| s.iter().map(|tf| (t, tf.cw().cw().cw())).collect::<Vec<(&Tile, Transform)>>() )
-                              .collect::<Vec<(&Tile, Transform)>>();
-
         let corner_tl = corners_tl.iter().skip(5).nth(0).unwrap();
 
         verboseln!("Define [0,0] := ({}, {:?}):", corner_tl.0.id, corner_tl.1);
         verboseln!("{}", corner_tl.0.transform(corner_tl.1).format_bitmap());
 
         candidates.insert((0, 0),  vec![*corner_tl]);
-        candidates.insert((11,0),  corners_tr);
-        candidates.insert((11,11), corners_br);
-        candidates.insert((0,11),  corners_bl);
 
         for yy in 0..12 {
             for xx in 0..12 {
@@ -495,37 +450,26 @@ impl Tile {
         return r;
     }
 
-    fn side_to_int(s: &[bool;10]) -> u32 {
-        let mut u=0;
-        for v in s.iter() {
-            u *= 2;
-            if *v { u += 1; }
-        }
-        return u;
-    }
-
-    fn side_to_str(s: &[bool;10]) -> String {
-        let mut u=String::with_capacity(10);
-        for v in s.iter() {
-            if *v { u.push('#'); } else { u.push('.'); }
-        }
-        return u;
-    }
-
-    fn side_to_str_rev(s: &[bool;10]) -> String {
-        let mut u=String::with_capacity(10);
+    fn side_to_int(s: &[bool;10]) -> (u32,u32) {
+        let mut u1=0;
         for i in 0..10 {
-            if s[9-i] { u.push('#'); } else { u.push('.'); }
+            u1 *= 2;
+            if s[i] { u1 += 1; }
         }
-        return u;
+        let mut u2=0;
+        for i in 0..10 {
+            u2 *= 2;
+            if s[9-i] { u2 += 1; }
+        }
+        return (u1,u2);
     }
 
-    fn get_side(&self, d: Compass, flipped: bool) -> &[bool;10] {
-        return self.sides.get(&(d,flipped)).unwrap();
+    fn get_side(&self, d: Compass, flipped: bool) -> (u32,u32) {
+        return *self.sides.get(&(d,flipped)).unwrap();
     }
 
-    fn get_side_after_transform(&self, d: Compass, tf: Transform) -> &[bool;10] {
-        return self.sides.get(&d.transform_back(tf)).unwrap();
+    fn get_side_after_transform(&self, d: Compass, tf: Transform) -> (u32,u32) {
+        return *self.sides.get(&d.transform_back(tf)).unwrap();
     }
 
     fn calc_side(&self, d: Compass, flipped: bool) -> [bool;10] {
@@ -596,7 +540,7 @@ impl Tile {
                 let mut c = 0;
                 for tile in tiles.iter().filter(|t| t.id != self.id) {
                     for d2 in Compass::iter() {
-                        if Tile::sides_match_direct(side, &tile.get_side(d2, true)) {
+                        if side.0 == tile.get_side(d2, true).0 {
                             c+=1;
                             break;
                         }
@@ -611,16 +555,10 @@ impl Tile {
         return r;
     }
 
-    fn sides_match_direct(a: &[bool;10], b: &[bool;10]) -> bool
-    {
-        for i in 0..10 { if a[i] != b[i] { return false; } }
-        return true;
-    }
-
     fn gen_cache(&mut self) {
         for c in Compass::iter() {
-            self.sides.insert((c, false), self.calc_side(c, false));
-            self.sides.insert((c, true),  self.calc_side(c, true));
+            self.sides.insert((c, false), Self::side_to_int(&self.calc_side(c, false)));
+            self.sides.insert((c, true),  Self::side_to_int(&self.calc_side(c, true)));
         }
     }
 }
