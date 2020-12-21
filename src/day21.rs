@@ -97,6 +97,14 @@ impl AdventOfCodeDay for Day21 {
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+
+        let mut candidates = self.find_allergen_candidates();
+        candidates.sort_by(|a,b| a.0.cmp(&b.0));
+
+        if is_verbose!() {
+            for (k,v) in &candidates { verboseln!("{: <9} ({}) := {:?}", k, v.len(), v); }
+        }
+
+        return candidates.iter().map(|(_,v)|v[0].clone()).collect::<Vec<String>>().join(",");
     }
 }
