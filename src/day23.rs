@@ -52,6 +52,35 @@ impl Day23 {
 
         verboseln!();
     }
+
+    fn do_move_linkedlist(cups: &mut [u32; 1_000_000], currcup: u32) -> u32 {
+        let n0 = currcup;
+        let n1 = cups[n0 as usize];
+        let n2 = cups[n1 as usize];
+        let n3 = cups[n2 as usize];
+        let n4 = cups[n3 as usize];
+
+        let mut dest = (n0+(1_000_000-1)) % 1_000_000;
+        while dest == n1 || dest == n2 || dest == n3 {
+            dest = (dest+(1_000_000-1)) % 1_000_000;
+        }
+
+        let d1 = cups[dest as usize];
+
+        //verboseln!("Cups [ptr]: {:?}", cups.iter().take(16).collect::<Vec<_>>());
+        //verboseln!("current: {}", currcup);
+        //verboseln!("picked: {},{},{}", n1,n2,n3);
+        //verboseln!("destination: {}", dest);
+
+        // remove after curr
+        cups[n0 as usize]   = n4;
+
+        // insert after dest
+        cups[dest as usize] = n1;
+        cups[n3 as usize]   = d1;
+
+        return n4;
+    }
 }
 
 impl AdventOfCodeDay for Day23 {
@@ -74,7 +103,33 @@ impl AdventOfCodeDay for Day23 {
         return r;
     }
 
+    
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        let mut cups = [0u32; 1_000_000]; // at cell[x] is the value of the cup right to the cup with the value x  (-> single-linked-list)
+
+        for idx in 0..1_000_000 {
+            if idx == (1_000_000-1) {
+                cups[idx] = (self.input[0]-1) as u32;
+            } else if idx > 8 {
+                cups[idx] = (idx+1) as u32;
+            } else if idx == 8 {
+                cups[(self.input[idx]-1) as usize] = 9;
+            } else {
+                cups[(self.input[idx]-1) as usize] = (self.input[idx+1 as usize]-1) as u32;
+            }
+        }
+
+        let mut curr = (self.input[0]-1) as u32;
+        for _ in 0..10_000_000 {
+            curr = Self::do_move_linkedlist(&mut cups, curr);
+        }
+
+        let n1 = cups[0 as usize]  as u128;
+        let n2 = cups[n1 as usize] as u128;
+
+        verboseln!("{} * {}", n1+1, n2+1);
+
+        return ((n1+1)*(n2+1)).to_string();
     }
+    
 }
