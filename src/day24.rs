@@ -1,8 +1,11 @@
 use crate::common::AdventOfCodeDay;
 
 use std::collections::HashMap;
+use std::cmp;
+use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, EnumIter)]
 enum HexDir {
     EAST,
     SOUTHEAST,
@@ -59,7 +62,7 @@ impl Day24 {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Hash, Eq)]
+#[derive(Debug, PartialEq, Copy, Clone, Hash, Eq)]
 struct HexCoordOddR {
     q: i32,
     r: i32,
@@ -89,11 +92,85 @@ fn realmod(v: i32, m: i32) -> i32 {
     return ((v % m) + m) % m
 }
 
+#[derive(Clone)]
+struct HexGrid {
+    data: HashMap<HexCoordOddR, bool>,
+    min_r: i32,
+    min_q: i32,
+    max_r: i32,
+    max_q: i32,
+}
+
+impl HexGrid {
+    pub fn new() -> Self {
+        return Self {
+            data: HashMap::new(),
+            min_r: 0,
+            min_q: 0,
+            max_r: 1,
+            max_q: 1,
+        }
+    }
+
+    fn update_coords(&mut self, c: HexCoordOddR) {
+        self.min_r = cmp::min(self.min_r, c.r);
+        self.max_r = cmp::max(self.max_r, c.r+1);
+        self.min_q = cmp::min(self.min_q, c.q);
+        self.max_q = cmp::max(self.max_q, c.q+1);
+    }
+
+    fn get(&self, c: HexCoordOddR) -> bool {
+        return *self.data.get(&c).unwrap_or(&false);
+    }
+
+    fn set(&mut self, c: HexCoordOddR, v: bool) {
+        self.update_coords(c);
+        self.data.insert(c, v);
+    }
+
+    fn flip(&mut self, c: HexCoordOddR) {
+        self.update_coords(c);
+        self.data.insert(c, !*self.data.get(&c).unwrap_or(&false));
+    }
+
+    fn neighbours(&self, c: HexCoordOddR) -> usize {
+        return HexDir::iter().filter(|d| self.get(c.move_by(d))).count();
+    }
+
+    fn step_automata(self) -> Self {
+        let mut a = Self {
+            data: HashMap::with_capacity(self.data.len()),
+            min_r: 0,
+            min_q: 0,
+            max_r: 1,
+            max_q: 1,
+        };
+
+        for r in (self.min_r-2)..(self.max_r+3) {
+            for q in (self.min_q-2)..(self.max_q+3) {
+                let coord = HexCoordOddR{r:r, q:q};
+                let old = self.get(coord);
+                let nc = self.neighbours(coord);
+
+                if old && (nc == 0 || nc > 2) {
+                    a.set(coord, false);
+                } else if !old && (nc == 2) {
+                    a.set(coord, true);
+                } else {
+                    a.set(coord, old);
+                }
+            }
+        }
+
+        return a;
+    }
+}
+
 impl AdventOfCodeDay for Day24 {
 
     fn task_1(&self) -> String {
 
-        let mut grid = HashMap::<HexCoordOddR, bool>::new();
+        let mut grid = HexGrid::new();
 
         for path in &self.input {
             
@@ -104,17 +181,28 @@ impl AdventOfCodeDay for Day24 {
                 coord = coord2;
             }
 
-            let state = !*grid.get(&coord).unwrap_or(&false);
+            let state = !grid.get(coord);
 
             verboseln!("Set [{},{}] -> {}", coord.q, coord.r, state);
 
-            grid.insert(coord.clone(), state);
+            grid.set(coord, state);
         }
 
-        return grid.iter().filter(|(_, v)| **v).count().to_string();
+        return grid.data.iter().filter(|(_, v)| **v).count().to_string();
     }
 
     fn task_2(&self) -> String  {
-        return "TODO".to_owned() //TODO
+        let mut grid = HexGrid::new();
+
+        for path in &self.input {
+            grid.flip(path.iter().fold(HexCoordOddR::zero(), |a,b|a.move_by(b)))
+        }
+
+        for _ in 0..100 {
+            verboseln!("Black: {} (Size: {}..{} | {}..{})", grid.data.iter().filter(|(_, v)| **v).count(), grid.min_r, grid.max_r, grid.min_q, grid.max_q);
+            grid = grid.step_automata();
+        }
+
+        return grid.data.iter().filter(|(_, v)| **v).count().to_string();
     }
 }
